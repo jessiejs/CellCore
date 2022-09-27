@@ -20,6 +20,7 @@ var textures = {
     eraser:"Tx2/Eraser.png",
     sucker: "Tx2/Sucker.png",
     pushable: "Tx2/Pushable.png",
+    trash: "Tx2/Trash.png",
 };
 var textureElements = {};
 var gameTickTime = 0;
@@ -41,6 +42,7 @@ var editorTools = [
     'drill',
     'pushable',
     'sucker',
+    'trash',
     'eraser',
 ];
 var blockerImmovableDirections = [
@@ -384,82 +386,30 @@ function translateCamera() {
     ctx.translate(-cameraX,-cameraY);
 }
 
-function drawdrill(ctx) {
-    ctx.roundRect(-25,-25,50,50,10);
-    ctx.fillStyle = "red";
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.moveTo(-10,-10);
-    ctx.lineTo(-10,10);
-    ctx.lineTo(10,0);
-    ctx.fill();
-}
-
-function drawpusher(ctx) {
-    ctx.roundRect(-25,-25,50,50,10);
-    ctx.fillStyle = "blue";
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.moveTo(-10,-10);
-    ctx.lineTo(-10,10);
-    ctx.lineTo(10,0);
-    ctx.fill();
-}
-
-function drawblocker(ctx) {
-    ctx.roundRect(-25,-25,50,50,10);
-    ctx.fillStyle = "gray";
-    ctx.fill();
-}
-
-function drawrotater(ctx) {
-    ctx.roundRect(-25,-25,50,50,10);
-    ctx.fillStyle = "orange";
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(0, 0, 10, 0, 2 * Math.PI, false);
-    ctx.closePath();
-    ctx.fill();
-}
-
-function drawgenerator(ctx) {
-    ctx.roundRect(-25,-25,50,50,10);
-    ctx.fillStyle = "green";
-    ctx.fill();
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.rect(-5,-5,30,10);
-    ctx.rect(-25,-5,5,10);
-    ctx.closePath();
-    ctx.fill();
-}
-
-CanvasRenderingContext2D.prototype.roundRect = function (x, y, width, height, radius) {
-    if (width < 2 * radius) radius = width / 2;
-    if (height < 2 * radius) radius = height / 2;
-    this.beginPath();
-    this.moveTo(x + radius, y);
-    this.arcTo(x + width, y, x + width, y + height, radius);
-    this.arcTo(x + width, y + height, x, y + height, radius);
-    this.arcTo(x, y + height, x, y, radius);
-    this.arcTo(x, y, x + width, y, radius);
-    this.closePath();
-    return this;
-  }
-
 var cellTick = () => {
-    for (var x = 0; x < grid.length; x++) {
-        for (var y = 0; y < grid[x].length; y++) {
-            if (grid[x][y] && window[grid[x][y].type] && grid[x][y].c != c) {
-                grid[x][y].c = c;
-                window[grid[x][y].type](x,y);
+    var priorityPhases = ['rotater','alternaterotater','sucker','drill','generater','mover'];
+    for (var i in priorityPhases) {
+        for (var x = 0; x < grid.length; x++) {
+            for (var y = 0; y < grid[x].length; y++) {
+                if (grid[x][y] && grid[x][y].type == priorityPhases[i]) {
+                    tryUpdate(x,y);
+                }
             }
         }
     }
+    for (var x = 0; x < grid.length; x++) {
+        for (var y = 0; y < grid[x].length; y++) {
+            tryUpdate(x,y);
+        }
+    }
     c++;
+}
+
+function tryUpdate(x,y) {
+    if (grid[x][y] && window[grid[x][y].type] && grid[x][y].c != c) {
+        grid[x][y].c = c;
+        window[grid[x][y].type](x,y);
+    }
 }
 
 function drill(x,y) {
@@ -551,10 +501,11 @@ function alternaterotater(x,y) {
 }
 
 
-function push(dir, x, y) {
+function push(d, x, y) {
     if (!grid[x][y]) {
         return;
     }
+    var dir = d % 4;
     grid[x][y].immovableDirections = grid[x][y].immovableDirections || window[grid[x][y].type+"ImmovableDirections"];
     if ((grid[x][y] && grid[x][y].immovableDirections && grid[x][y].immovableDirections.includes(dir))) {
         return;
@@ -563,14 +514,19 @@ function push(dir, x, y) {
     var width = grid.length;
     var height = grid[0].length;
     try {
+        if (grid[x][y].type == "trash") {
+            grid[x - directions[dir].x][y - directions[dir].y] = null;
+            console.log("exiting early");
+            return;
+        }
         if (grid[x + directions[dir].x][y + directions[dir].y]) {
             push(dir,x+directions[dir].x,y+directions[dir].y);
         }
         if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-            grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
+            trgrid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
             grid[x][y] = null;
         }
-        if (grid[x + directions[dir].x][y + directions[dir].y].type == "pusher") {
+        if (grid[x + directions[dir].x][y + directions[dir].y] && grid[x + directions[dir].x][y + directions[dir].y].type == "pusher") {
             grid[x + directions[dir].x][y + directions[dir].y].c = c;
         }
         if (width != grid.length) {
@@ -581,9 +537,19 @@ function push(dir, x, y) {
                 throw new Error();
             }
         }
-    } catch {
+    } catch(e) {
         grid = structuredClone(initialGrid);
     }
+    /*if (grid[x][y].type == "trash") {
+        var trdr = (dir + 2) % 4;
+        console.log(`destroying ${x + directions[trdr].x} ${y + directions[trdr].y}`)
+        try {
+            grid[x + directions[trdr].x][y + directions[trdr].y] = null;
+        } catch {}
+        try {
+            initialGrid[x + directions[trdr].x][y + directions[trdr].y] = null;
+        } catch {}
+    }*/
 }
 
 function lerp(a,b,t) {
