@@ -9,17 +9,17 @@ var targetCameraY = 0;
 var targetCameraScale = 1;
 var editorHover = null;
 var textures = {
-    drill: "tx2/drill.png",
-    pusher: "tx2/pusher.png",
-    generator: "tx2/generator.png",
-    rotater: "tx2/rotator.png",
-    alternaterotater: "tx2/altrotater.png",
-    blocker: "tx2/blocker.png",
-    tileA:"tx2/lightgrid.png",
-    tileB:"tx2/darkgrid.png",
-    eraser:"tx2/eraser.png",
-    sucker: "tx2/sucker.png",
-    pushable: "tx2/pushable.png",
+    drill: "Tx2/Drill.png",
+    pusher: "Tx2/Pusher.png",
+    generator: "Tx2/Generator.png",
+    rotater: "Tx2/Rotator.png",
+    alternaterotater: "Tx2/AltRotater.png",
+    blocker: "Tx2/Blocker.png",
+    tileA:"Tx2/LightGrid.png",
+    tileB:"Tx2/DarkGrid.png",
+    eraser:"Tx2/Eraser.png",
+    sucker: "Tx2/Sucker.png",
+    pushable: "Tx2/Pushable.png",
 };
 var textureElements = {};
 var gameTickTime = 0;
