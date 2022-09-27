@@ -22,6 +22,7 @@ var textures = {
     pushable: "Tx2/Pushable.png",
     trash: "Tx2/Trash.png",
 };
+var smoothedEditorToolIndex = 0;
 var textureElements = {};
 var gameTickTime = 0;
 var tickFunction = editorTick;
@@ -31,6 +32,7 @@ var mouseX;
 var mouseY;
 var mouseDown = false;
 var editorDir = 0;
+var smoothEditorDir = 0;
 var editorToolIndex = 0;
 var ctxTransform;
 var editorTools = [
@@ -51,6 +53,7 @@ var blockerImmovableDirections = [
     2,
     3
 ];
+var selectedEditorTool = null;
 var directions = [
     {
         x:1,
@@ -73,11 +76,12 @@ var directions = [
 window.onmousedown = (e) => {
     if (e.button == 2) {
         editorDir++;
-        if (editorDir > 3) {
-            editorDir = 0;
-        }
     } else {
-        mouseDown = true;
+        if (selectedEditorTool) {
+            editorToolIndex = selectedEditorTool;
+        } else {
+            mouseDown = true;
+        }
     }
 }
 
@@ -120,24 +124,42 @@ window.onwheel = (e) => {
 
 window.onmousemove = (e) => {
     editorHover = null;
+    selectedEditorTool = null;
     if (!editorGrid || !window.ctx) {
         return;
     }
     if (tickFunction == editorTick) {
-        ctx.resetTransform();
+        /*ctx.resetTransform();
         translateCamera();
-        ctxTransform = ctx.getTransform();
+        ctxTransform = ctx.getTransform();*/
+        mouseX = e.clientX;
+        mouseY = e.clientY;
         for (var x = 0; x < editorGrid.length; x++) {
             for (var y = 0; y < editorGrid[x].length; y++) {
                 var tileRect = transformRectangle(x*50+grid.length*-25,y*50+grid[0].length*-25,50,50);
-                mouseX = e.clientX;
-                mouseY = e.clientY;
                 if (mouseX > tileRect.x && mouseY > tileRect.y && mouseX < tileRect.x + tileRect.w && mouseY < tileRect.y + tileRect.h) {
                     editorHover = {
                         x:x,
                         y:y
                     };
                 }
+            }
+        }
+        ctx.resetTransform();
+        for (var x in editorTools) {
+            if (x != editorToolIndex) {
+                ctx.globalAlpha = 0.5;
+            } else {
+                ctx.globalAlpha = 1;
+            }
+            var yPos = 75+x*65-25-smoothedEditorToolIndex*65;
+            var rectLeft = 50;
+            var rectTop = yPos;
+            var rectRight = 100;
+            var rectBottom = yPos + 50;
+            if (mouseX > rectLeft && mouseY > rectTop && mouseX < rectRight && mouseY < rectBottom) {
+                selectedEditorTool = x;
+                editorHover = null;
             }
         }
     }
@@ -306,7 +328,7 @@ function editorTick() {
                 editorGrid[editorHover.x][editorHover.y] = {
                     x : 0,
                     y : 0,
-                    dir : editorDir,
+                    dir : editorDir % 4,
                     displayRotation: 0,
                     type : editorTools[editorToolIndex]
                 }
@@ -314,10 +336,19 @@ function editorTick() {
         }
     }
     grid = structuredClone(editorGrid);
-    ctx.resetTransform();
-    ctx.translate(75,75);
-    ctx.rotate(editorDir*Math.PI/2);
-    ctx.drawImage(textureElements[editorTools[editorToolIndex]],-25,-25,50,50);
+    smoothEditorDir = lerp(smoothEditorDir, editorDir, deltaTime * 15);
+    smoothedEditorToolIndex = lerp(smoothedEditorToolIndex,editorToolIndex,deltaTime*15);
+    for (var x in editorTools) {
+        if (x != editorToolIndex) {
+            ctx.globalAlpha = 0.5;
+        } else {
+            ctx.globalAlpha = 1;
+        }
+        ctx.resetTransform();
+        ctx.translate(75,75-smoothedEditorToolIndex*65+x*65);
+        ctx.rotate(smoothEditorDir*Math.PI/2);
+        ctx.drawImage(textureElements[editorTools[x]],-25,-25,50,50);
+    }
 }
 
 function gameTick() {
@@ -408,6 +439,7 @@ var cellTick = () => {
 function tryUpdate(x,y) {
     if (grid[x][y] && window[grid[x][y].type] && grid[x][y].c != c) {
         grid[x][y].c = c;
+        grid[x][y].dir %= 4;
         window[grid[x][y].type](x,y);
     }
 }
@@ -523,7 +555,7 @@ function push(d, x, y) {
             push(dir,x+directions[dir].x,y+directions[dir].y);
         }
         if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-            trgrid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
+            grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
             grid[x][y] = null;
         }
         if (grid[x + directions[dir].x][y + directions[dir].y] && grid[x + directions[dir].x][y + directions[dir].y].type == "pusher") {
