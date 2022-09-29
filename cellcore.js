@@ -86,6 +86,10 @@ function gridContains(x, y) {
     return x >= 0 && y >= 0 && x < grid.length && y < grid[0].length;
 }
 
+function gridContainsNonNull(x,y) {
+    return gridContains(x,y) && !!grid[x][y];
+}
+
 Math.clamp = (c, a, b) => {
     if (c < a) {
         return a;
@@ -418,7 +422,9 @@ function editorTick() {
             if (editorGrid[x][y]) {
                 editorGrid[x][y].x = x;
                 editorGrid[x][y].y = y;
-                editorGrid[x][y].displayRotation = editorGrid[x][y].dir * 90;
+                if (!editorGrid[x][y].displayRotation) {
+                    editorGrid[x][y].displayRotation = editorGrid[x][y].dir * 90;
+                }
                 ctx.resetTransform();
                 translateCamera();
                 ctx.translate((editorGrid[x][y].x * 50) + 25 + editorGrid.length * -25, (editorGrid[x][y].y * 50) + 25 + editorGrid[0].length * -25);
@@ -615,6 +621,9 @@ function generator(x, y) {
     if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
         var width = grid.length;
         var height = grid[0].length;
+        if (!grid[x - directions[dir].x][y - directions[dir].y]) {
+            return;
+        }
         push(dir, x + directions[dir].x, y + directions[dir].y);
         if (!grid[x + directions[dir].x][y + directions[dir].y]) {
             grid[x + directions[dir].x][y + directions[dir].y] = structuredClone(grid[x - directions[dir].x][y - directions[dir].y]);
@@ -638,7 +647,7 @@ function rotater(x, y) {
     grid[x][y].nonStandardDir++;
     grid[x][y].dir = grid[x][y].nonStandardDir;
     for (var i in directions) {
-        if (gridContains(x + directions[i].x, y + directions[i].y)) {
+        if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
             grid[x + directions[i].x][y + directions[i].y].dir++;
         }
     }
@@ -651,7 +660,7 @@ function alternaterotater(x, y) {
     grid[x][y].nonStandardDir--;
     grid[x][y].dir = grid[x][y].nonStandardDir;
     for (var i in directions) {
-        if (gridContains(x + directions[i].x, y + directions[i].y)) {
+        if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
             grid[x + directions[i].x][y + directions[i].y].dir--;
         }
     }
@@ -676,12 +685,11 @@ function push(d, x, y) {
     } else {
         return false;
     }
-    if (!gridContains(x + directions[dir].x, y + directions[dir].y)) {
-        return false;
-    }
     if (grid[x][y].type == "trash") {
         grid[x - directions[dir].x][y - directions[dir].y] = null;
-        console.log("exiting early");
+        return false;
+    }
+    if (!gridContains(x + directions[dir].x, y + directions[dir].y)) {
         return false;
     }
     if (grid[x + directions[dir].x][y + directions[dir].y]) {
