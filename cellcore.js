@@ -51,7 +51,6 @@ var editorTools = [
     'drill',
     'pushable',
     'sucker',
-    //'fan',
     'trash',
     'eraser',
 ];
@@ -159,9 +158,6 @@ window.onmousemove = (e) => {
         if (!editorGrid || !window.ctx) {
             return;
         }
-        /*ctx.resetTransform();
-        translateCamera();
-        ctxTransform = ctx.getTransform();*/
         for (var x = 0; x < editorGrid.length; x++) {
             for (var y = 0; y < editorGrid[x].length; y++) {
                 var tileRect = transformRectangle(x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
@@ -199,8 +195,6 @@ window.onmousemove = (e) => {
         for (var i in menuOptions) {
             var x = centerX;
             var y = yTop + MENU_WIDTH + ((i + 8) * MENU_OPTION_HEIGHT);
-            //ctx.fillStyle = "white";
-            //ctx.fillRect(x - MENU_WIDTH / 2,y-25,MENU_WIDTH,50);
             if (mouseX > x - MENU_WIDTH / 2 && mouseX < x + MENU_WIDTH / 2 && mouseY > y - 25 && mouseY < y + 25) {
                 menuSelectionIndex = i;
             }
@@ -237,73 +231,6 @@ window.onload = () => {
         }
         reader.readAsText(file);
     }
-    /*
-    grid = [];
-    for (var y = 0; y < 7; y++) {
-        var row = [];
-        for (var x = 0; x < 10; x++) {
-            row.push(null);
-        }
-        grid.push(row);
-    }
-    grid[1][0] = {
-        x : 0,
-        y : 0,
-        dir : 0,
-        displayRotation: 0,
-        type : 'blocker'
-    }
-    grid[0][5] = {
-        x:0,
-        y:0,
-        dir:3,
-        displayRotation:0,
-        type:'pusher'
-    };
-    grid[0][1] = {
-        x:0,
-        y:0,
-        dir:3,
-        displayRotation:0,
-        type:'rotater'
-    };
-    grid[6][1] = {
-        x:0,
-        y:0,
-        dir:3,
-        displayRotation:0,
-        type:'rotater'
-    };
-    grid[2][6] = {
-        x:0,
-        y:0,
-        dir:0,
-        displayRotation:0,
-        type:'pusher'
-    };
-    grid[0][8] = {
-        x:0,
-        y:0,
-        dir:2,
-        displayRotation:0,
-        type:'rotater'
-    };
-    grid[1][8] = {
-        x:0,
-        y:0,
-        dir:0,
-        displayRotation:0,
-        type:'generator'
-    };
-    grid[1][9] = {
-        x:0,
-        y:0,
-        dir:1,
-        displayRotation:0,
-        type:'pusher'
-    };
-    editorGrid = structuredClone(grid);
-    */
 }
 
 function menuTick() {
@@ -533,7 +460,6 @@ function editorTick() {
             ctx.globalAlpha = 1;
         }
         ctx.globalAlpha = 1;
-        //ctx.globalAlpha = Math.clamp(1 - Math.abs(smoothedEditorToolIndex - x) / 2, 0.25, 1);
         var scaleMultiplier = Math.clamp(1.3 - Math.abs(smoothedEditorToolIndex - x) / 4, 1, 1.3);
         ctx.resetTransform();
         ctx.translate(75, 75 - smoothedEditorToolIndex * 65 + x * 65);
@@ -577,7 +503,6 @@ function gameTick() {
 }
 
 function calculateTranslatedPoint(x, y) {
-    //return new DOMPoint(x, y).matrixTransform(ctxTransform);
     return {
         x: (x - cameraX) * cameraScale + innerWidth / 2,
         y: (y - cameraY) * cameraScale + innerHeight / 2
@@ -645,9 +570,6 @@ function pusher(x, y) {
     var dir = grid[x][y].dir % 4;
     while (dir < 0) {
         dir += 4;
-    }
-    if (push(dir, x, y)) {
-        //grid[x+directions[dir].x][y+directions[dir].y].c = c;
     }
 }
 
@@ -773,9 +695,6 @@ function push(d, x, y) {
         grid[x][y] = null;
     } else {
         return false;
-    }
-    if (grid[x + directions[dir].x][y + directions[dir].y] && grid[x + directions[dir].x][y + directions[dir].y].type == "pusher") {
-        //grid[x + directions[dir].x][y + directions[dir].y].c = c;
     }
     return true;
 }
