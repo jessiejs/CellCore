@@ -237,19 +237,23 @@ window.onload = () => {
     }
 }
 
+function createGridForHaxors(w,h) {
+    for (var y = 0; y < h; y++) {
+        var row = [];
+        for (var x = 0; x < w; x++) {
+            row.push(null);
+        }
+        editorGrid.push(row);
+    }
+}
+
 function menuTick() {
     menuOptions = [];
     menuOptions.push({
         text: "New Level",
         func: () => {
             editorGrid = [];
-            for (var y = 0; y < 10; y++) {
-                var row = [];
-                for (var x = 0; x < 10; x++) {
-                    row.push(null);
-                }
-                editorGrid.push(row);
-            }
+            createGridForHaxors(100,100);
         }
     });
     if (grid) {
