@@ -571,6 +571,7 @@ function pusher(x, y) {
     while (dir < 0) {
         dir += 4;
     }
+    push(dir, x, y);
 }
 
 function sucker(x, y) {
