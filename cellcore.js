@@ -611,7 +611,6 @@ function fan(x, y) {
 
 function generator(x, y) {
     var dir = grid[x][y].dir % 4;
-    var gridIntitial = structuredClone(grid);
     if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
         var width = grid.length;
         var height = grid[0].length;
@@ -676,9 +675,6 @@ function push(d, x, y) {
     } else {
         return false;
     }
-    var initialGrid = structuredClone(grid);
-    var width = grid.length;
-    var height = grid[0].length;
     if (!gridContains(x + directions[dir].x, y + directions[dir].y)) {
         return false;
     }
