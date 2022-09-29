@@ -83,6 +83,10 @@ var directions = [
 var grid;
 var editorGrid;
 
+function gridContains(x, y) {
+    return x >= 0 && y >= 0 && x < grid.length && y < grid[0].length;
+}
+
 Math.clamp = (c, a, b) => {
     if (c < a) {
         return a;
@@ -345,14 +349,14 @@ function menuTick() {
             func: () => {
                 var tempLink = document.createElement("a");
                 var blob = new Blob([JSON.stringify({
-                    type:"cellCorev1",
-                    grid:editorGrid
-                })], {type: 'text/cellcore'});
-               
+                    type: "cellCorev1",
+                    grid: editorGrid
+                })], { type: 'text/cellcore' });
+
                 tempLink.setAttribute('href', URL.createObjectURL(blob));
                 tempLink.setAttribute('download', `My Level.clc`);
                 tempLink.click();
-                 
+
                 URL.revokeObjectURL(tempLink.href);
             }
         });
@@ -534,7 +538,7 @@ function editorTick() {
         ctx.resetTransform();
         ctx.translate(75, 75 - smoothedEditorToolIndex * 65 + x * 65);
         ctx.rotate(smoothEditorDir * Math.PI / 2);
-        ctx.drawImage(textureElements[editorTools[x]], -25*scaleMultiplier, -25*scaleMultiplier, 50*scaleMultiplier, 50*scaleMultiplier);
+        ctx.drawImage(textureElements[editorTools[x]], -25 * scaleMultiplier, -25 * scaleMultiplier, 50 * scaleMultiplier, 50 * scaleMultiplier);
     }
 }
 
@@ -566,14 +570,7 @@ function gameTick() {
                 translateCamera();
                 ctx.translate((grid[x][y].x * 50) + 25 + grid.length * -25, (grid[x][y].y * 50) + 25 + grid[0].length * -25);
                 ctx.rotate(grid[x][y].displayRotation * Math.PI / 180);
-                //if (window["draw"+grid[x][y].type]) {
-                //    window["draw"+grid[x][y].type](ctx);
-                //}
-                //try {
                 ctx.drawImage(textureElements[grid[x][y].type], -25, -25, 50, 50);
-                //} catch {
-                //    console.log("texture " + grid[x][y].type + " does not exist");               
-                //}
             }
         }
     }
@@ -633,10 +630,10 @@ function tryUpdate(x, y) {
 
 function drill(x, y) {
     var dir = grid[x][y].dir % 4;
-    try {
+    if (gridContains(x + directions[dir], x, y + directions[dir].y)) {
         grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
         grid[x][y] = null;
-    } catch { }
+    }
 }
 
 function blocker(x, y) {
@@ -693,7 +690,7 @@ function fan(x, y) {
 function generator(x, y) {
     var dir = grid[x][y].dir % 4;
     var gridIntitial = structuredClone(grid);
-    try {
+    if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
         var width = grid.length;
         var height = grid[0].length;
         push(dir, x + directions[dir].x, y + directions[dir].y);
@@ -709,8 +706,6 @@ function generator(x, y) {
                 throw new Error();
             }
         }
-    } catch {
-        grid = structuredClone(gridIntitial);
     }
 }
 
@@ -721,9 +716,9 @@ function rotater(x, y) {
     grid[x][y].nonStandardDir++;
     grid[x][y].dir = grid[x][y].nonStandardDir;
     for (var i in directions) {
-        try {
+        if (gridContains(x + directions[i].x, y + directions[i].y)) {
             grid[x + directions[i].x][y + directions[i].y].dir++;
-        } catch { }
+        }
     }
 }
 
@@ -734,9 +729,9 @@ function alternaterotater(x, y) {
     grid[x][y].nonStandardDir--;
     grid[x][y].dir = grid[x][y].nonStandardDir;
     for (var i in directions) {
-        try {
+        if (gridContains(x + directions[i].x, y + directions[i].y)) {
             grid[x + directions[i].x][y + directions[i].y].dir--;
-        } catch { }
+        }
     }
 }
 
@@ -757,52 +752,32 @@ function push(d, x, y) {
     if (!grid[x][y].pushedDirections.includes(d)) {
         grid[x][y].pushedDirections.push(d);
     } else {
-        return;
+        return false;
     }
     var initialGrid = structuredClone(grid);
     var width = grid.length;
     var height = grid[0].length;
-    try {
-        if (grid[x][y].type == "trash") {
-            grid[x - directions[dir].x][y - directions[dir].y] = null;
-            console.log("exiting early");
-            return;
-        }
-        if (grid[x + directions[dir].x][y + directions[dir].y]) {
-            push(dir, x + directions[dir].x, y + directions[dir].y);
-        }
-        if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-            grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
-            grid[x][y] = null;
-        } else {
-            return false;
-        }
-        if (grid[x + directions[dir].x][y + directions[dir].y] && grid[x + directions[dir].x][y + directions[dir].y].type == "pusher") {
-            //grid[x + directions[dir].x][y + directions[dir].y].c = c;
-        }
-        if (width != grid.length) {
-            throw new Error();
-        }
-        for (var x in grid) {
-            if (grid[x].length != height) {
-                throw new Error();
-            }
-        }
-        return true;
-    } catch (e) {
-        grid = structuredClone(initialGrid);
+    if (!gridContains(x + directions[dir].x, y + directions[dir].y)) {
+        return false;
     }
-    return false;
-    /*if (grid[x][y].type == "trash") {
-        var trdr = (dir + 2) % 4;
-        console.log(`destroying ${x + directions[trdr].x} ${y + directions[trdr].y}`)
-        try {
-            grid[x + directions[trdr].x][y + directions[trdr].y] = null;
-        } catch {}
-        try {
-            initialGrid[x + directions[trdr].x][y + directions[trdr].y] = null;
-        } catch {}
-    }*/
+    if (grid[x][y].type == "trash") {
+        grid[x - directions[dir].x][y - directions[dir].y] = null;
+        console.log("exiting early");
+        return false;
+    }
+    if (grid[x + directions[dir].x][y + directions[dir].y]) {
+        push(dir, x + directions[dir].x, y + directions[dir].y);
+    }
+    if (!grid[x + directions[dir].x][y + directions[dir].y]) {
+        grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
+        grid[x][y] = null;
+    } else {
+        return false;
+    }
+    if (grid[x + directions[dir].x][y + directions[dir].y] && grid[x + directions[dir].x][y + directions[dir].y].type == "pusher") {
+        //grid[x + directions[dir].x][y + directions[dir].y].c = c;
+    }
+    return true;
 }
 
 function lerp(a, b, t) {
