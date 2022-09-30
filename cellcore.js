@@ -296,12 +296,19 @@ function menuTick() {
             }
         });
     }
+    var faviconImage = "Tx2/Pusher.png";
+    var favicon = document.getElementById("icon");
     var menuLogo = "pusher"; // for users of development versions
     if (window.location.hostname != 'codelikecraze.github.io') {
         menuLogo = "rotater";
+        faviconImage = "Tx2/Rotator.png"
     }
     if (location.hostname.includes("localhost") || location.hostname.includes("127.")) {
         menuLogo = "generator";
+        faviconImage = "Tx2/Generator.png"
+    }
+    if (favicon.href != faviconImage) {
+        favicon.href = faviconImage;
     }
     var centerX = innerWidth / 2;
     var yTop = innerHeight / 2;
@@ -565,7 +572,7 @@ function tryUpdate(x, y) {
 
 function drill(x, y) {
     var dir = grid[x][y].dir % 4;
-    if (gridContains(x + directions[dir], x, y + directions[dir].y)) {
+    if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
         grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
         grid[x][y] = null;
     }
