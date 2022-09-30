@@ -296,16 +296,16 @@ function menuTick() {
             }
         });
     }
-    var faviconImage = "Tx2/Pusher.png";
+    var faviconImage = "/Tx2/Pusher.png";
     var favicon = document.getElementById("icon");
     var menuLogo = "pusher"; // for users of development versions
     if (window.location.hostname != 'codelikecraze.github.io') {
         menuLogo = "rotater";
-        faviconImage = "Tx2/Rotator.png"
+        faviconImage = "/Tx2/Rotator.png"
     }
     if (location.hostname.includes("localhost") || location.hostname.includes("127.")) {
         menuLogo = "generator";
-        faviconImage = "Tx2/Generator.png"
+        faviconImage = "/Tx2/Generator.png"
     }
     if (favicon.href != faviconImage) {
         favicon.href = faviconImage;
