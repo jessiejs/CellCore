@@ -67,6 +67,8 @@ var smoothEditorDir = 0;
 var editorToolIndex = 0;
 var ctxTransform;
 var usePrideIcon = true;
+var w;
+var h;
 var editorTools = [
     'menu',
     'pan',
@@ -268,8 +270,8 @@ function inputMove(e) {
         }
     }
     if (tickFunction == menuTick) {
-        var centerX = innerWidth / 2;
-        var yTop = innerHeight / 2;
+        var centerX = w / 2;
+        var yTop = h / 2;
         yTop -= MENU_WIDTH / 2;
         yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
         for (var i in menuOptions) {
@@ -326,7 +328,19 @@ function createGridForHaxors(w,h) {
     }
 }
 
+function screenContainsPoint(x,y) {
+    return x > 0 && y > 0 && x < w && y < h;
+}
+
+function screenContainsTransformedRect(x,y,w,h) {
+    var rect = transformRectangle(x,y,w,h);
+    return screenContainsPoint(rect.x,rect.y) || screenContainsPoint(rect.x+rect.w,rect.y) || screenContainsPoint(rect.x,rect.y+rect.h) || screenContainsPoint(rect.x+rect.w,rect.y+rect.h);
+}
+
 function drawImage(image,x,y,w,h,disableCScale) {
+    if (!screenContainsTransformedRect(x,y,w,h) && !disableCScale) {
+        return;
+    }
     var cScale = 1;
     var isStandardTile = ctx.roundRect != null && image != "tileA" && image != "tileB";
     if (tickFunction == editorTick || tickFunction == gameTick) {
@@ -417,21 +431,23 @@ function menuTick() {
     if (favicon.href != faviconImage) {
         favicon.href = faviconImage;
     }
-    var centerX = innerWidth / 2;
-    var yTop = innerHeight / 2;
+    var centerX = w / 2;
+    var yTop = h / 2;
     yTop -= MENU_WIDTH / 2;
     yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
     if (usePrideIcon) {
-        drawImage("prwhite", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        drawImage("prwhite", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH,true);
         ctx.globalCompositeOperation = "multiply";
         for (var i in prideColors) {
-            ctx.fillStyle = prideColors[i];
+            if (ctx.fillStyle != prideColors[i]) {
+                ctx.fillStyle = prideColors[i];
+            }
             ctx.fillRect(centerX - (MENU_WIDTH / 2)-1, yTop + (MENU_WIDTH*i/prideColors.length), MENU_WIDTH+2, (MENU_WIDTH+3)/prideColors.length);
         }
         ctx.globalCompositeOperation = "normal";
-        drawImage("prcenter", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        drawImage("prcenter", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH,true);
     } else {
-        drawImage(menuLogo, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        drawImage(menuLogo, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH,true);
     }
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
@@ -450,6 +466,9 @@ function menuTick() {
 function tick() {
     window.canvas = document.getElementById('canvas');
     window.ctx = canvas.getContext('2d');
+
+    w = innerWidth;
+    h = innerHeight;
 
     var t = performance.now();
 
@@ -502,12 +521,12 @@ function tick() {
     cameraY = lerp(cameraY, targetCameraY, deltaTime * 5);
     cameraScale = lerp(cameraScale, targetCameraScale, deltaTime * 5);
 
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
+    canvas.width = w;
+    canvas.height = h;
     ctx.imageSmoothingEnabled = false;
 
     ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, innerWidth, innerHeight);
+    ctx.fillRect(0, 0, w, h);
     ctx.font = "25px 'Press Start 2P'";
     tickFunction();
     ctx.resetTransform();
@@ -535,6 +554,11 @@ function tick() {
     }
 
     ctx.fillStyle = "white";
+    if (navigator.userAgent.includes("Firefox")) {
+        ctx.fillStyle = "red";
+        ctx.globalAlpha = 1;
+        versionText = "PLEASE RUN ON CHROME -- FIREFOX HAS PERFORMANCE ISSUES";
+    }
     ctx.fillText(versionText, 25, 25);
 
     ctx.globalAlpha = 1;
@@ -581,8 +605,8 @@ function editorTick() {
             } else if (editorTools[editorToolIndex] == "eraser") {
                 editorGrid[editorHover.x][editorHover.y] = null;
             } else if (editorTools[editorToolIndex] == "pan") {
-                var xMovement = (mouseX - innerWidth / 2) / innerWidth * 2;
-                var yMovement = (mouseY - innerHeight / 2) / innerHeight * 2;
+                var xMovement = (mouseX - w / 2) / w * 2;
+                var yMovement = (mouseY - h / 2) / h * 2;
                 targetCameraX += xMovement * deltaTime * 250;
                 targetCameraY += yMovement * deltaTime * 250;
             } else if (editorTools[editorToolIndex] == "zoom") {
@@ -653,8 +677,8 @@ function gameTick() {
 
 function calculateTranslatedPoint(x, y) {
     return {
-        x: (x - cameraX) * cameraScale + innerWidth / 2,
-        y: (y - cameraY) * cameraScale + innerHeight / 2
+        x: (x - cameraX) * cameraScale + w / 2,
+        y: (y - cameraY) * cameraScale + h / 2
     }
 }
 
@@ -670,7 +694,7 @@ function transformRectangle(x, y, w, h) {
 }
 
 function translateCamera() {
-    ctx.translate(innerWidth / 2, innerHeight / 2);
+    ctx.translate(w / 2, h / 2);
     ctx.scale(cameraScale, cameraScale);
     ctx.translate(-cameraX, -cameraY);
 }
