@@ -306,7 +306,7 @@ function createGridForHaxors(w,h) {
 }
 
 function menuTick() {
-    usePrideIcon = new Date().getMonth == 6;
+    usePrideIcon = new Date().getMonth == 5;
     menuOptions = [];
     menuOptions.push({
         text: "New Level",
@@ -650,9 +650,11 @@ function tryUpdate(x, y) {
 
 function drill(x, y) {
     var dir = grid[x][y].dir % 4;
-    if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
-        grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
-        grid[x][y] = null;
+    if (!push(dir,x,y)) {
+        if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
+            grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
+            grid[x][y] = null;
+        }
     }
 }
 
