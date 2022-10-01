@@ -31,6 +31,27 @@ var textures = {
     prwhite: "Tx2/PRWhite.png",
     prcenter: "Tx2/PRCenter.png",
 };
+var texturesLDM = {
+    pan:"white",
+    zoom:"white",
+    drill:"#FF6C6C",
+    pusher:"#5297FF",
+    generator:"#04DB00",
+    rotater:"#FF7B52",
+    alternaterotater:"#52FFCB",
+    blocker:"#828282",
+    tileA:"#2E2E2E",
+    tileB:"black",
+    eraser:"#FF8F8F",
+    sucker:"#6F6CFF",
+    pushable:"#FFB800",
+    trash:"#9E00FF",
+    menu:"white",
+    editor:"#480090",
+    fan:"#FF6CD6",
+    prwhite:"white",
+    prcenter:"white"
+};
 var menuOptions = [];
 var smoothedEditorToolIndex = 0;
 var textureElements = {};
@@ -305,6 +326,33 @@ function createGridForHaxors(w,h) {
     }
 }
 
+function drawImage(image,x,y,w,h,disableCScale) {
+    var cScale = 1;
+    var isStandardTile = ctx.roundRect != null && image != "tileA" && image != "tileB";
+    if (tickFunction == editorTick || tickFunction == gameTick) {
+        cScale = cameraScale;
+    }
+    if (disableCScale) {
+        cScale = 1;
+    }
+    if (w * cScale < 15) {
+        if (isStandardTile) {
+            ctx.fillStyle = texturesLDM[image];
+            ctx.beginPath();
+            ctx.roundRect(x,y,w,h,w/4);
+            ctx.fill();
+            ctx.closePath();
+            ctx.fillStyle = "white";
+            ctx.fillRect(x + w/4, y + h/4, w/2,h/2)
+        } else {
+            ctx.fillStyle = texturesLDM[image];
+            ctx.fillRect(x,y,w,h);
+        }
+    } else {
+        ctx.drawImage(textureElements[image],x,y,w,h);
+    }
+}
+
 function menuTick() {
     usePrideIcon = new Date().getMonth == 5;
     menuOptions = [];
@@ -374,16 +422,16 @@ function menuTick() {
     yTop -= MENU_WIDTH / 2;
     yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
     if (usePrideIcon) {
-        ctx.drawImage(textureElements.prwhite, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        drawImage("prwhite", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
         ctx.globalCompositeOperation = "multiply";
         for (var i in prideColors) {
             ctx.fillStyle = prideColors[i];
             ctx.fillRect(centerX - (MENU_WIDTH / 2)-1, yTop + (MENU_WIDTH*i/prideColors.length), MENU_WIDTH+2, (MENU_WIDTH+3)/prideColors.length);
         }
         ctx.globalCompositeOperation = "normal";
-        ctx.drawImage(textureElements.prcenter, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        drawImage("prcenter", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
     } else {
-        ctx.drawImage(textureElements[menuLogo], centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        drawImage(menuLogo, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
     }
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
@@ -437,11 +485,17 @@ function tick() {
     if (keysDown.ArrowRight || keysDown.KeyD) {
         targetCameraX += deltaTime * 500;
     }
-    if (keysDown.KeyQ) {
-        targetCameraScale += deltaTime * 1;
-    }
     if (keysDown.KeyE) {
+        targetCameraScale += deltaTime * 1;
+        if (targetCameraScale > 3.25) {
+            targetCameraScale = 3.25;
+        }
+    }
+    if (keysDown.KeyQ) {
         targetCameraScale -= deltaTime * 1;
+        if (targetCameraScale < 0.25) {
+            targetCameraScale = 0.25;
+        }
     }
 
     cameraX = lerp(cameraX, targetCameraX, deltaTime * 5);
@@ -492,9 +546,9 @@ function editorTick() {
             ctx.resetTransform();
             translateCamera();
             if ((x + y) % 2 == 0) {
-                ctx.drawImage(textureElements["tileA"], x * 50 + editorGrid.length * -25, y * 50 + editorGrid[0].length * -25, 50, 50);
+                drawImage("tileA", x * 50 + editorGrid.length * -25, y * 50 + editorGrid[0].length * -25, 50, 50);
             } else {
-                ctx.drawImage(textureElements["tileB"], x * 50 + editorGrid.length * -25, y * 50 + editorGrid[0].length * -25, 50, 50);
+                drawImage("tileB", x * 50 + editorGrid.length * -25, y * 50 + editorGrid[0].length * -25, 50, 50);
             }
         }
     }
@@ -510,7 +564,7 @@ function editorTick() {
                 translateCamera();
                 ctx.translate((editorGrid[x][y].x * 50) + 25 + editorGrid.length * -25, (editorGrid[x][y].y * 50) + 25 + editorGrid[0].length * -25);
                 ctx.rotate(editorGrid[x][y].displayRotation * Math.PI / 180);
-                ctx.drawImage(textureElements[editorGrid[x][y].type], -25, -25, 50, 50);
+                drawImage(editorGrid[x][y].type, -25, -25, 50, 50);
             }
         }
     }
@@ -559,7 +613,7 @@ function editorTick() {
         ctx.resetTransform();
         ctx.translate(75, 75 - smoothedEditorToolIndex * 65 + x * 65);
         ctx.rotate(smoothEditorDir * Math.PI / 2);
-        ctx.drawImage(textureElements[editorTools[x]], -25 * scaleMultiplier, -25 * scaleMultiplier, 50 * scaleMultiplier, 50 * scaleMultiplier);
+        drawImage(editorTools[x], -25 * scaleMultiplier, -25 * scaleMultiplier, 50 * scaleMultiplier, 50 * scaleMultiplier,true);
     }
 }
 
@@ -575,9 +629,9 @@ function gameTick() {
             ctx.resetTransform();
             translateCamera();
             if ((x + y) % 2 == 0) {
-                ctx.drawImage(textureElements["tileA"], x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
+                drawImage("tileA", x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
             } else {
-                ctx.drawImage(textureElements["tileB"], x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
+                drawImage("tileB", x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
             }
         }
     }
@@ -591,7 +645,7 @@ function gameTick() {
                 translateCamera();
                 ctx.translate((grid[x][y].x * 50) + 25 + grid.length * -25, (grid[x][y].y * 50) + 25 + grid[0].length * -25);
                 ctx.rotate(grid[x][y].displayRotation * Math.PI / 180);
-                ctx.drawImage(textureElements[grid[x][y].type], -25, -25, 50, 50);
+                drawImage(grid[x][y].type, -25, -25, 50, 50);
             }
         }
     }
