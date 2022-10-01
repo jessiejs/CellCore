@@ -120,6 +120,9 @@ var prideColorsCycle = [[
     "#0038A8"
 ]];
 var selectedEditorTool = null;
+window.onerror = (e) => {
+    alert(e.toString());
+}
 var directions = [
     {
         x: 1,
