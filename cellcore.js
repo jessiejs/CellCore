@@ -165,6 +165,7 @@ window.onmousedown = (e) => {
 }
 
 window.ontouchstart = (e) => {
+    alert("touch");
     inputDown(e);
 }
 
