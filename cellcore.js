@@ -11,6 +11,8 @@ var targetCameraScale = 1;
 var editorHover = null;
 var menuSelectionIndex = null;
 var textures = {
+    pan: "Tx2/Pan.png",
+    zoom: "Tx2/Zoom.png",
     drill: "Tx2/Drill.png",
     pusher: "Tx2/Pusher.png",
     generator: "Tx2/Generator.png",
@@ -26,6 +28,8 @@ var textures = {
     menu: "Tx2/Menu.png",
     editor: "Tx2/Editor.png",
     fan: "Tx2/Fan.png",
+    prwhite: "Tx2/PRWhite.png",
+    prcenter: "Tx2/PRCenter.png",
 };
 var menuOptions = [];
 var smoothedEditorToolIndex = 0;
@@ -41,8 +45,11 @@ var editorDir = 0;
 var smoothEditorDir = 0;
 var editorToolIndex = 0;
 var ctxTransform;
+var usePrideIcon = true;
 var editorTools = [
     'menu',
+    'pan',
+    'zoom',
     'pusher',
     'blocker',
     'generator',
@@ -60,6 +67,35 @@ var blockerImmovableDirections = [
     2,
     3
 ];
+var prideColors = [
+    "#f7e81d",
+    "#efefef",
+    "#8a04f7",
+    "#21003d"
+];
+var prideColorsCycle = [[
+    "#f7e81d",
+    "#efefef",
+    "#8a04f7",
+    "#21003d"
+],[
+    "cyan",
+    "pink",
+    "#efefef",
+    "pink",
+    "cyan"
+],[
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "blue",
+    "purple"
+],[
+    "#D60270",
+    "#9B4F96",
+    "#0038A8"
+]];
 var selectedEditorTool = null;
 var directions = [
     {
@@ -101,6 +137,14 @@ Math.clamp = (c, a, b) => {
 }
 
 window.onmousedown = (e) => {
+    inputDown(e);
+}
+
+window.ontouchstart = (e) => {
+    inputDown(e);
+}
+
+function inputDown(e) {
     if (e.button == 2) {
         editorDir++;
     } else {
@@ -124,6 +168,10 @@ window.oncontextmenu = (e) => {
 }
 
 window.onmouseup = (e) => {
+    mouseDown = false;
+}
+
+window.ontouchend = (e) => {
     mouseDown = false;
 }
 
@@ -153,6 +201,13 @@ window.onwheel = (e) => {
 }
 
 window.onmousemove = (e) => {
+    inputMove(e);
+}
+window.ontouchmove = (e) => {
+    inputMove(e);
+}
+
+function inputMove(e) {
     editorHover = null;
     selectedEditorTool = null;
     menuSelectionIndex = null;
@@ -235,6 +290,9 @@ window.onload = () => {
         }
         reader.readAsText(file);
     }
+    setInterval(()=>{
+        prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length-1)];
+    },1000);
 }
 
 function createGridForHaxors(w,h) {
@@ -248,6 +306,7 @@ function createGridForHaxors(w,h) {
 }
 
 function menuTick() {
+    usePrideIcon = new Date().getMonth == 6;
     menuOptions = [];
     menuOptions.push({
         text: "New Level",
@@ -314,7 +373,18 @@ function menuTick() {
     var yTop = innerHeight / 2;
     yTop -= MENU_WIDTH / 2;
     yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
-    ctx.drawImage(textureElements[menuLogo], centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+    if (usePrideIcon) {
+        ctx.drawImage(textureElements.prwhite, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+        ctx.globalCompositeOperation = "multiply";
+        for (var i in prideColors) {
+            ctx.fillStyle = prideColors[i];
+            ctx.fillRect(centerX - (MENU_WIDTH / 2)-1, yTop + (MENU_WIDTH*i/prideColors.length), MENU_WIDTH+2, (MENU_WIDTH+3)/prideColors.length);
+        }
+        ctx.globalCompositeOperation = "normal";
+        ctx.drawImage(textureElements.prcenter, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+    } else {
+        ctx.drawImage(textureElements[menuLogo], centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH);
+    }
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -456,6 +526,14 @@ function editorTick() {
                 tickFunction = menuTick;
             } else if (editorTools[editorToolIndex] == "eraser") {
                 editorGrid[editorHover.x][editorHover.y] = null;
+            } else if (editorTools[editorToolIndex] == "pan") {
+                var xMovement = (mouseX - innerWidth / 2) / innerWidth * 2;
+                var yMovement = (mouseY - innerHeight / 2) / innerHeight * 2;
+                targetCameraX += xMovement * deltaTime * 250;
+                targetCameraY += yMovement * deltaTime * 250;
+            } else if (editorTools[editorToolIndex] == "zoom") {
+                var yMovement = (mouseY - innerHeight / 2) / innerHeight * 2;
+                targetCameraScale += yMovement * deltaTime * 1;
             } else {
                 editorGrid[editorHover.x][editorHover.y] = {
                     x: 0,
