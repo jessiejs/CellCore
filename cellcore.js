@@ -30,6 +30,7 @@ var textures = {
     fan: "Tx2/Fan.png",
     prwhite: "Tx2/PRWhite.png",
     prcenter: "Tx2/PRCenter.png",
+    sideblock: "Tx2/SideBlock.png",
 };
 var texturesLDM = {
     pan:"white",
@@ -52,6 +53,144 @@ var texturesLDM = {
     prwhite:"white",
     prcenter:"white"
 };
+var tiles = {
+    drill: {
+        main(x, y) {
+            var dir = grid[x][y].dir % 4;
+            if (!push(dir,x,y)) {
+                if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
+                    grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
+                    grid[x][y] = null;
+                }
+            }
+        }
+    },
+    blocker: {
+        main(x, y) {
+            grid[x][y].immovableDirections = [0, 1, 2, 3];
+            grid[x][y].dir = 0;
+        }
+    },
+    pusher: {
+        main(x, y) {
+            var dir = grid[x][y].dir % 4;
+            while (dir < 0) {
+                dir += 4;
+            }
+            push(dir, x, y);
+        }        
+    },
+    sucker: {
+        main(x, y) {
+            var dir = grid[x][y].dir % 4;
+            if (!grid[x + directions[dir].x][y + directions[dir].y]) {
+                var grabbedX = x + directions[dir].x;
+                var grabbedY = y + directions[dir].y;
+                var timeDown = 20;
+                while (!grid[grabbedX][grabbedY]) {
+                    timeDown--;
+                    if (timeDown == 0) {
+                        return;
+                    }
+                    grabbedX += directions[dir].x;
+                    grabbedY += directions[dir].y;
+                }
+                push((dir + 2) % 4, grabbedX, grabbedY)
+            }
+        }
+    },
+    fan: {
+        main(x, y) {
+            var dir = grid[x][y].dir % 4;
+            if (!grid[x + directions[dir].x][y + directions[dir].y]) {
+                var grabbedX = x + directions[dir].x;
+                var grabbedY = y + directions[dir].y;
+                var timeDown = 20;
+                while (!grid[grabbedX][grabbedY]) {
+                    timeDown--;
+                    if (timeDown == 0) {
+                        return;
+                    }
+                    grabbedX += directions[dir].x;
+                    grabbedY += directions[dir].y;
+                }
+                push(dir, grabbedX, grabbedY)
+            }
+        }
+    },
+    generator: {
+        main(x, y) {
+            var dir = grid[x][y].dir % 4;
+            if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
+                var width = grid.length;
+                var height = grid[0].length;
+                if (!grid[x - directions[dir].x][y - directions[dir].y]) {
+                    return;
+                }
+                push(dir, x + directions[dir].x, y + directions[dir].y);
+                if (!grid[x + directions[dir].x][y + directions[dir].y]) {
+                    grid[x + directions[dir].x][y + directions[dir].y] = structuredClone(grid[x - directions[dir].x][y - directions[dir].y]);
+                    grid[x + directions[dir].x][y + directions[dir].y].c = c;
+                }
+                if (width != grid.length) {
+                    throw new Error();
+                }
+                for (var x in grid) {
+                    if (grid[x].length != height) {
+                        throw new Error();
+                    }
+                }
+            }
+        }
+    },
+    rotater: {
+        main(x, y) {
+            if (!grid[x][y].nonStandardDir) {
+                grid[x][y].nonStandardDir = 0;
+            }
+            grid[x][y].nonStandardDir++;
+            grid[x][y].dir = grid[x][y].nonStandardDir;
+            for (var i in directions) {
+                if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
+                    grid[x + directions[i].x][y + directions[i].y].dir++;
+                }
+            }
+        }
+    },
+    alternaterotater: {
+        main(x, y) {
+            if (!grid[x][y].nonStandardDir) {
+                grid[x][y].nonStandardDir = 0;
+            }
+            grid[x][y].nonStandardDir--;
+            grid[x][y].dir = grid[x][y].nonStandardDir;
+            for (var i in directions) {
+                if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
+                    grid[x + directions[i].x][y + directions[i].y].dir--;
+                }
+            }
+        }
+    },
+    trash: {
+        generateInfo(x,y) {
+            grid[x][y].trashDirections = [0,1,2,3];
+        }
+    },
+    blocker: {
+        generateInfo(x,y) {
+            grid[x][y].immovableDirections = [0,1,2,3];
+        }
+    },
+    sideblock: {
+        generateInfo(x,y) {
+            if (grid[x][y].dir % 2 == 1) {
+                grid[x][y].immovableDirections = [1,3];
+            } else {
+                grid[x][y].immovableDirections = [0,2];
+            }
+        }
+    }
+}
 var menuOptions = [];
 var smoothedEditorToolIndex = 0;
 var textureElements = {};
@@ -81,6 +220,8 @@ var editorTools = [
     'drill',
     'pushable',
     'sucker',
+    'fan',
+    'sideblock',
     'trash',
     'eraser',
 ];
@@ -306,7 +447,6 @@ window.onload = () => {
             var text = o.target.result;
             var data = JSON.parse(text);
             updater(data);
-            console.log(data);
             if (data.grid) {
                 grid = structuredClone(data.grid);
                 editorGrid = structuredClone(data.grid);
@@ -342,7 +482,7 @@ function screenContainsTransformedRect(x,y,w,h) {
 
 function drawImage(image,x,y,w,h,disableCScale) {
     if (!screenContainsTransformedRect(x,y,w,h) && !disableCScale) {
-        return;
+        //return;
     }
     var cScale = 1;
     var isStandardTile = ctx.roundRect != null && image != "tileA" && image != "tileB";
@@ -509,15 +649,15 @@ function tick() {
     }
     if (keysDown.KeyE) {
         targetCameraScale += deltaTime * 1;
-        if (targetCameraScale > 3.25) {
-            targetCameraScale = 3.25;
-        }
+    }
+    if (targetCameraScale > 3.25) {
+        targetCameraScale = 3.25;
     }
     if (keysDown.KeyQ) {
         targetCameraScale -= deltaTime * 1;
-        if (targetCameraScale < 0.25) {
-            targetCameraScale = 0.25;
-        }
+    }
+    if (targetCameraScale < 0.25) {
+        targetCameraScale = 0.25;
     }
 
     cameraX = lerp(cameraX, targetCameraX, deltaTime * 5);
@@ -722,119 +862,10 @@ var cellTick = () => {
 }
 
 function tryUpdate(x, y) {
-    if (grid[x][y] && window[grid[x][y].type] && grid[x][y].c != c) {
+    if (grid[x][y] && tiles[grid[x][y].type] && tiles[grid[x][y].type].main && grid[x][y].c != c) {
         grid[x][y].c = c;
         grid[x][y].dir %= 4;
-        window[grid[x][y].type](x, y);
-    }
-}
-
-function drill(x, y) {
-    var dir = grid[x][y].dir % 4;
-    if (!push(dir,x,y)) {
-        if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
-            grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
-            grid[x][y] = null;
-        }
-    }
-}
-
-function blocker(x, y) {
-    grid[x][y].immovableDirections = [0, 1, 2, 3];
-    grid[x][y].dir = 0;
-}
-
-function pusher(x, y) {
-    var dir = grid[x][y].dir % 4;
-    while (dir < 0) {
-        dir += 4;
-    }
-    push(dir, x, y);
-}
-
-function sucker(x, y) {
-    var dir = grid[x][y].dir % 4;
-    if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-        var grabbedX = x + directions[dir].x;
-        var grabbedY = y + directions[dir].y;
-        var timeDown = 20;
-        while (!grid[grabbedX][grabbedY]) {
-            timeDown--;
-            if (timeDown == 0) {
-                return;
-            }
-            grabbedX += directions[dir].x;
-            grabbedY += directions[dir].y;
-        }
-        push((dir + 2) % 4, grabbedX, grabbedY)
-    }
-}
-
-function fan(x, y) {
-    var dir = grid[x][y].dir % 4;
-    if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-        var grabbedX = x + directions[dir].x;
-        var grabbedY = y + directions[dir].y;
-        var timeDown = 20;
-        while (!grid[grabbedX][grabbedY]) {
-            timeDown--;
-            if (timeDown == 0) {
-                return;
-            }
-            grabbedX += directions[dir].x;
-            grabbedY += directions[dir].y;
-        }
-        push(dir, grabbedX, grabbedY)
-    }
-}
-
-function generator(x, y) {
-    var dir = grid[x][y].dir % 4;
-    if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
-        var width = grid.length;
-        var height = grid[0].length;
-        if (!grid[x - directions[dir].x][y - directions[dir].y]) {
-            return;
-        }
-        push(dir, x + directions[dir].x, y + directions[dir].y);
-        if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-            grid[x + directions[dir].x][y + directions[dir].y] = structuredClone(grid[x - directions[dir].x][y - directions[dir].y]);
-            grid[x + directions[dir].x][y + directions[dir].y].c = c;
-        }
-        if (width != grid.length) {
-            throw new Error();
-        }
-        for (var x in grid) {
-            if (grid[x].length != height) {
-                throw new Error();
-            }
-        }
-    }
-}
-
-function rotater(x, y) {
-    if (!grid[x][y].nonStandardDir) {
-        grid[x][y].nonStandardDir = 0;
-    }
-    grid[x][y].nonStandardDir++;
-    grid[x][y].dir = grid[x][y].nonStandardDir;
-    for (var i in directions) {
-        if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
-            grid[x + directions[i].x][y + directions[i].y].dir++;
-        }
-    }
-}
-
-function alternaterotater(x, y) {
-    if (!grid[x][y].nonStandardDir) {
-        grid[x][y].nonStandardDir = 0;
-    }
-    grid[x][y].nonStandardDir--;
-    grid[x][y].dir = grid[x][y].nonStandardDir;
-    for (var i in directions) {
-        if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
-            grid[x + directions[i].x][y + directions[i].y].dir--;
-        }
+        tiles[grid[x][y].type].main(x, y);
     }
 }
 
@@ -844,6 +875,9 @@ function push(d, x, y) {
         return;
     }
     var dir = d % 4;
+    if (tiles[grid[x][y].type] && tiles[grid[x][y].type].generateInfo) {
+        tiles[grid[x][y].type].generateInfo(x,y);
+    }
     grid[x][y].immovableDirections = grid[x][y].immovableDirections || window[grid[x][y].type + "ImmovableDirections"];
     if ((grid[x][y] && grid[x][y].immovableDirections && grid[x][y].immovableDirections.includes(dir))) {
         return;
@@ -857,7 +891,7 @@ function push(d, x, y) {
     } else {
         return false;
     }
-    if (grid[x][y].type == "trash") {
+    if (!!grid[x][y].trashDirections && grid[x][y].trashDirections.includes(dir)) {
         grid[x - directions[dir].x][y - directions[dir].y] = null;
         return false;
     }
