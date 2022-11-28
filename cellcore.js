@@ -30,34 +30,34 @@ var textures = {
     fan: "Tx2/Fan.png",
     prwhite: "Tx2/PRWhite.png",
     prcenter: "Tx2/PRCenter.png",
-    sideblock: "Tx2/SideBlock.png",
+    sideblock: "Tx2/Sideblock.png",
 };
 var texturesLDM = {
-    pan:"white",
-    zoom:"white",
-    drill:"#FF6C6C",
-    pusher:"#5297FF",
-    generator:"#04DB00",
-    rotater:"#FF7B52",
-    alternaterotater:"#52FFCB",
-    blocker:"#828282",
-    tileA:"#2E2E2E",
-    tileB:"black",
-    eraser:"#FF8F8F",
-    sucker:"#6F6CFF",
-    pushable:"#FFB800",
-    trash:"#9E00FF",
-    menu:"white",
-    editor:"#480090",
-    fan:"#FF6CD6",
-    prwhite:"white",
-    prcenter:"white"
+    pan: "white",
+    zoom: "white",
+    drill: "#FF6C6C",
+    pusher: "#5297FF",
+    generator: "#04DB00",
+    rotater: "#FF7B52",
+    alternaterotater: "#52FFCB",
+    blocker: "#828282",
+    tileA: "#2E2E2E",
+    tileB: "black",
+    eraser: "#FF8F8F",
+    sucker: "#6F6CFF",
+    pushable: "#FFB800",
+    trash: "#9E00FF",
+    menu: "white",
+    editor: "#480090",
+    fan: "#FF6CD6",
+    prwhite: "white",
+    prcenter: "white"
 };
 var tiles = {
     drill: {
         main(x, y) {
             var dir = grid[x][y].dir % 4;
-            if (!push(dir,x,y)) {
+            if (!push(dir, x, y)) {
                 if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
                     grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
                     grid[x][y] = null;
@@ -78,7 +78,7 @@ var tiles = {
                 dir += 4;
             }
             push(dir, x, y);
-        }        
+        }
     },
     sucker: {
         main(x, y) {
@@ -172,21 +172,21 @@ var tiles = {
         }
     },
     trash: {
-        generateInfo(x,y) {
-            grid[x][y].trashDirections = [0,1,2,3];
+        generateInfo(x, y) {
+            grid[x][y].trashDirections = [0, 1, 2, 3];
         }
     },
     blocker: {
-        generateInfo(x,y) {
-            grid[x][y].immovableDirections = [0,1,2,3];
+        generateInfo(x, y) {
+            grid[x][y].immovableDirections = [0, 1, 2, 3];
         }
     },
     sideblock: {
-        generateInfo(x,y) {
+        generateInfo(x, y) {
             if (grid[x][y].dir % 2 == 1) {
-                grid[x][y].immovableDirections = [1,3];
+                grid[x][y].immovableDirections = [1, 3];
             } else {
-                grid[x][y].immovableDirections = [0,2];
+                grid[x][y].immovableDirections = [0, 2];
             }
         }
     }
@@ -242,20 +242,20 @@ var prideColorsCycle = [[
     "#efefef",
     "#8a04f7",
     "#21003d"
-],[
+], [
     "cyan",
     "pink",
     "#efefef",
     "pink",
     "cyan"
-],[
+], [
     "red",
     "orange",
     "yellow",
     "green",
     "blue",
     "purple"
-],[
+], [
     "#D60270",
     "#9B4F96",
     "#0038A8"
@@ -289,8 +289,8 @@ function gridContains(x, y) {
     return x >= 0 && y >= 0 && x < grid.length && y < grid[0].length;
 }
 
-function gridContainsNonNull(x,y) {
-    return gridContains(x,y) && !!grid[x][y];
+function gridContainsNonNull(x, y) {
+    return gridContains(x, y) && !!grid[x][y];
 }
 
 Math.clamp = (c, a, b) => {
@@ -456,12 +456,12 @@ window.onload = () => {
         }
         reader.readAsText(file);
     }
-    setInterval(()=>{
-        prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length-1)];
-    },1000);
+    setInterval(() => {
+        prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length - 1)];
+    }, 1000);
 }
 
-function createGridForHaxors(w,h) {
+function createGridForHaxors(w, h) {
     for (var y = 0; y < h; y++) {
         var row = [];
         for (var x = 0; x < w; x++) {
@@ -471,17 +471,17 @@ function createGridForHaxors(w,h) {
     }
 }
 
-function screenContainsPoint(x,y) {
+function screenContainsPoint(x, y) {
     return x > 0 && y > 0 && x < w && y < h;
 }
 
-function screenContainsTransformedRect(x,y,w,h) {
-    var rect = transformRectangle(x,y,w,h);
-    return screenContainsPoint(rect.x,rect.y) || screenContainsPoint(rect.x+rect.w,rect.y) || screenContainsPoint(rect.x,rect.y+rect.h) || screenContainsPoint(rect.x+rect.w,rect.y+rect.h);
+function screenContainsTransformedRect(x, y, w, h) {
+    var rect = transformRectangle(x, y, w, h);
+    return screenContainsPoint(rect.x, rect.y) || screenContainsPoint(rect.x + rect.w, rect.y) || screenContainsPoint(rect.x, rect.y + rect.h) || screenContainsPoint(rect.x + rect.w, rect.y + rect.h);
 }
 
-function drawImage(image,x,y,w,h,disableCScale) {
-    if (!screenContainsTransformedRect(x,y,w,h) && !disableCScale) {
+function drawImage(image, x, y, w, h, disableCScale) {
+    if (!screenContainsTransformedRect(x, y, w, h) && !disableCScale) {
         //return;
     }
     var cScale = 1;
@@ -496,17 +496,17 @@ function drawImage(image,x,y,w,h,disableCScale) {
         if (isStandardTile) {
             ctx.fillStyle = texturesLDM[image];
             ctx.beginPath();
-            ctx.roundRect(x,y,w,h,w/4);
+            ctx.roundRect(x, y, w, h, w / 4);
             ctx.fill();
             ctx.closePath();
             ctx.fillStyle = "white";
-            ctx.fillRect(x + w/4, y + h/4, w/2,h/2)
+            ctx.fillRect(x + w / 4, y + h / 4, w / 2, h / 2)
         } else {
             ctx.fillStyle = texturesLDM[image];
-            ctx.fillRect(x,y,w,h);
+            ctx.fillRect(x, y, w, h);
         }
     } else {
-        ctx.drawImage(textureElements[image],x,y,w,h);
+        ctx.drawImage(textureElements[image], x, y, w, h);
     }
 }
 
@@ -517,7 +517,7 @@ function menuTick() {
         text: "New Level",
         func: () => {
             editorGrid = [];
-            createGridForHaxors(100,100);
+            createGridForHaxors(100, 100);
         }
     });
     if (grid) {
@@ -579,18 +579,18 @@ function menuTick() {
     yTop -= MENU_WIDTH / 2;
     yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
     if (usePrideIcon) {
-        drawImage("prwhite", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH,true);
+        drawImage("prwhite", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH, true);
         ctx.globalCompositeOperation = "multiply";
         for (var i in prideColors) {
             if (ctx.fillStyle != prideColors[i]) {
                 ctx.fillStyle = prideColors[i];
             }
-            ctx.fillRect(centerX - (MENU_WIDTH / 2)-1, yTop + (MENU_WIDTH*i/prideColors.length), MENU_WIDTH+2, (MENU_WIDTH+3)/prideColors.length);
+            ctx.fillRect(centerX - (MENU_WIDTH / 2) - 1, yTop + (MENU_WIDTH * i / prideColors.length), MENU_WIDTH + 2, (MENU_WIDTH + 3) / prideColors.length);
         }
         ctx.globalCompositeOperation = "normal";
-        drawImage("prcenter", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH,true);
+        drawImage("prcenter", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH, true);
     } else {
-        drawImage(menuLogo, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH,true);
+        drawImage(menuLogo, centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH, true);
     }
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
@@ -780,7 +780,7 @@ function editorTick() {
         ctx.resetTransform();
         ctx.translate(75, 75 - smoothedEditorToolIndex * 65 + x * 65);
         ctx.rotate(smoothEditorDir * Math.PI / 2);
-        drawImage(editorTools[x], -25 * scaleMultiplier, -25 * scaleMultiplier, 50 * scaleMultiplier, 50 * scaleMultiplier,true);
+        drawImage(editorTools[x], -25 * scaleMultiplier, -25 * scaleMultiplier, 50 * scaleMultiplier, 50 * scaleMultiplier, true);
     }
 }
 
@@ -876,7 +876,7 @@ function push(d, x, y) {
     }
     var dir = d % 4;
     if (tiles[grid[x][y].type] && tiles[grid[x][y].type].generateInfo) {
-        tiles[grid[x][y].type].generateInfo(x,y);
+        tiles[grid[x][y].type].generateInfo(x, y);
     }
     grid[x][y].immovableDirections = grid[x][y].immovableDirections || window[grid[x][y].type + "ImmovableDirections"];
     if ((grid[x][y] && grid[x][y].immovableDirections && grid[x][y].immovableDirections.includes(dir))) {
