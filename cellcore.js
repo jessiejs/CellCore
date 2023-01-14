@@ -124,7 +124,7 @@ var tiles = {
             if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
                 var width = grid.length;
                 var height = grid[0].length;
-                if (!grid[x - directions[dir].x][y - directions[dir].y]) {
+                if (!grid[x - directions[dir].x] || !grid[x - directions[dir].x][y - directions[dir].y]) {
                     return;
                 }
                 push(dir, x + directions[dir].x, y + directions[dir].y);
