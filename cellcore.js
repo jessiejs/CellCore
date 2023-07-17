@@ -438,27 +438,31 @@ let updater = (d) => {
 }
 
 window.onload = () => {
-    setInterval(tick, 0);
-    let fileUploader = document.getElementById("fileUploader");
-    fileUploader.onchange = (e) => {
-        let file = e.target.files[0];
-        let reader = new FileReader();
-        reader.onload = (o) => {
-            let text = o.target.result;
-            let data = JSON.parse(text);
-            updater(data);
-            if (data.grid) {
-                grid = structuredClone(data.grid);
-                editorGrid = structuredClone(data.grid);
-            } else {
-                alert("File import error!");
-            }
-        }
-        reader.readAsText(file);
-    }
-    setInterval(() => {
-        prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length - 1)];
-    }, 1000);
+	try {
+		setInterval(tick, 0);
+		let fileUploader = document.getElementById("fileUploader");
+		fileUploader.onchange = (e) => {
+			let file = e.target.files[0];
+			let reader = new FileReader();
+			reader.onload = (o) => {
+				let text = o.target.result;
+				let data = JSON.parse(text);
+				updater(data);
+				if (data.grid) {
+					grid = structuredClone(data.grid);
+					editorGrid = structuredClone(data.grid);
+				} else {
+					alert("File import error!");
+				}
+			}
+			reader.readAsText(file);
+		}
+		setInterval(() => {
+			prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length - 1)];
+		}, 1000);
+	} catch(err) {
+		alert(err);
+	}
 }
 
 function createGridForHaxors(w, h) {
