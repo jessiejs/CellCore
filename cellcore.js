@@ -562,7 +562,7 @@ function menuTick() {
     let faviconImage = "/Tx2/Pusher.png";
     let favicon = document.getElementById("icon");
     let menuLogo = "pusher"; // for users of development versions
-    if (window.location.hostname != 'codelikecraze.github.io') {
+    if (window.location.hostname != 'jessiejs.github.io') {
         menuLogo = "rotater";
         faviconImage = "/Tx2/Rotator.png"
     }
@@ -678,7 +678,7 @@ function tick() {
     ctx.textBaseline = "top";
 
     let versionText = "";
-    if (window.location.hostname != 'codelikecraze.github.io') {
+    if (window.location.hostname != 'jessiejs.github.io') {
         versionText = "FORKED";
     }
     if (location.hostname.includes("localhost") || location.hostname.includes("127.")) {
@@ -687,7 +687,7 @@ function tick() {
 
     if (tickFunction != editorTick && tickFunction != menuTick) {
         versionText = "ESC FOR MENU";
-        if (window.location.hostname != 'codelikecraze.github.io') {
+        if (window.location.hostname != 'jessiejs.github.io') {
             versionText = "FORK - ESC FOR MENU";
         }
         if (location.hostname.includes("localhost") || location.hostname.includes("127.")) {
