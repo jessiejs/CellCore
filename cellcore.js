@@ -1,16 +1,16 @@
 const MENU_WIDTH = 200;
 const MENU_OPTION_HEIGHT = 5;
-let deltaTime = 0.005;
-let c = 0;
-let cameraX = 0;
-let cameraY = 0;
-let cameraScale = 1;
-let targetCameraX = 0;
-let targetCameraY = 0;
-let targetCameraScale = 1;
-let editorHover = null;
-let menuSelectionIndex = null;
-let textures = {
+var deltaTime = 0.005;
+var c = 0;
+var cameraX = 0;
+var cameraY = 0;
+var cameraScale = 1;
+var targetCameraX = 0;
+var targetCameraY = 0;
+var targetCameraScale = 1;
+var editorHover = null;
+var menuSelectionIndex = null;
+var textures = {
     pan: "Tx2/Pan.png",
     zoom: "Tx2/Zoom.png",
     drill: "Tx2/Drill.png",
@@ -32,7 +32,7 @@ let textures = {
     prcenter: "Tx2/PRCenter.png",
     sideblock: "Tx2/Sideblock.png",
 };
-let texturesLDM = {
+var texturesLDM = {
     pan: "white",
     zoom: "white",
     drill: "#FF6C6C",
@@ -53,10 +53,10 @@ let texturesLDM = {
     prwhite: "white",
     prcenter: "white"
 };
-let tiles = {
+var tiles = {
     drill: {
         main(x, y) {
-            let dir = grid[x][y].dir % 4;
+            var dir = grid[x][y].dir % 4;
             if (!push(dir, x, y)) {
                 if (gridContains(x + directions[dir].x, x, y + directions[dir].y)) {
                     grid[x + directions[dir].x][y + directions[dir].y] = grid[x][y];
@@ -73,7 +73,7 @@ let tiles = {
     },
     pusher: {
         main(x, y) {
-            let dir = grid[x][y].dir % 4;
+            var dir = grid[x][y].dir % 4;
             while (dir < 0) {
                 dir += 4;
             }
@@ -82,11 +82,11 @@ let tiles = {
     },
     sucker: {
         main(x, y) {
-            let dir = grid[x][y].dir % 4;
+            var dir = grid[x][y].dir % 4;
             if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-                let grabbedX = x + directions[dir].x;
-                let grabbedY = y + directions[dir].y;
-                let timeDown = 20;
+                var grabbedX = x + directions[dir].x;
+                var grabbedY = y + directions[dir].y;
+                var timeDown = 20;
                 while (!grid[grabbedX][grabbedY]) {
                     timeDown--;
                     if (timeDown == 0) {
@@ -101,11 +101,11 @@ let tiles = {
     },
     fan: {
         main(x, y) {
-            let dir = grid[x][y].dir % 4;
+            var dir = grid[x][y].dir % 4;
             if (!grid[x + directions[dir].x][y + directions[dir].y]) {
-                let grabbedX = x + directions[dir].x;
-                let grabbedY = y + directions[dir].y;
-                let timeDown = 20;
+                var grabbedX = x + directions[dir].x;
+                var grabbedY = y + directions[dir].y;
+                var timeDown = 20;
                 while (!grid[grabbedX][grabbedY]) {
                     timeDown--;
                     if (timeDown == 0) {
@@ -120,10 +120,10 @@ let tiles = {
     },
     generator: {
         main(x, y) {
-            let dir = grid[x][y].dir % 4;
+            var dir = grid[x][y].dir % 4;
             if (gridContains(x + directions[dir].x, y + directions[dir].y)) {
-                let width = grid.length;
-                let height = grid[0].length;
+                var width = grid.length;
+                var height = grid[0].length;
                 if (!grid[x - directions[dir].x] || !grid[x - directions[dir].x][y - directions[dir].y]) {
                     return;
                 }
@@ -135,7 +135,7 @@ let tiles = {
                 if (width != grid.length) {
                     throw new Error();
                 }
-                for (let x in grid) {
+                for (var x in grid) {
                     if (grid[x].length != height) {
                         throw new Error();
                     }
@@ -150,7 +150,7 @@ let tiles = {
             }
             grid[x][y].nonStandardDir++;
             grid[x][y].dir = grid[x][y].nonStandardDir;
-            for (let i in directions) {
+            for (var i in directions) {
                 if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
                     grid[x + directions[i].x][y + directions[i].y].dir++;
                 }
@@ -164,7 +164,7 @@ let tiles = {
             }
             grid[x][y].nonStandardDir--;
             grid[x][y].dir = grid[x][y].nonStandardDir;
-            for (let i in directions) {
+            for (var i in directions) {
                 if (gridContainsNonNull(x + directions[i].x, y + directions[i].y)) {
                     grid[x + directions[i].x][y + directions[i].y].dir--;
                 }
@@ -191,24 +191,24 @@ let tiles = {
         }
     }
 }
-let menuOptions = [];
-let smoothedEditorToolIndex = 0;
-let textureElements = {};
-let gameTickTime = 0;
-let tickFunction = menuTick;
-let editorGrid;
-let keysDown = [];
-let mouseX;
-let mouseY;
-let mouseDown = false;
-let editorDir = 0;
-let smoothEditorDir = 0;
-let editorToolIndex = 0;
-let ctxTransform;
-let usePrideIcon = true;
-let w;
-let h;
-let editorTools = [
+var menuOptions = [];
+var smoothedEditorToolIndex = 0;
+var textureElements = {};
+var gameTickTime = 0;
+var tickFunction = menuTick;
+var editorGrid;
+var keysDown = [];
+var mouseX;
+var mouseY;
+var mouseDown = false;
+var editorDir = 0;
+var smoothEditorDir = 0;
+var editorToolIndex = 0;
+var ctxTransform;
+var usePrideIcon = true;
+var w;
+var h;
+var editorTools = [
     'menu',
     'pan',
     'zoom',
@@ -225,19 +225,19 @@ let editorTools = [
     'trash',
     'eraser',
 ];
-let blockerImmovableDirections = [
+var blockerImmovableDirections = [
     0,
     1,
     2,
     3
 ];
-let prideColors = [
+var prideColors = [
     "#f7e81d",
     "#efefef",
     "#8a04f7",
     "#21003d"
 ];
-let prideColorsCycle = [[
+var prideColorsCycle = [[
     "#f7e81d",
     "#efefef",
     "#8a04f7",
@@ -260,11 +260,11 @@ let prideColorsCycle = [[
     "#9B4F96",
     "#0038A8"
 ]];
-let selectedEditorTool = null;
+var selectedEditorTool = null;
 window.onerror = (e) => {
     alert(e.toString());
 }
-let directions = [
+var directions = [
     {
         x: 1,
         y: 0
@@ -282,8 +282,8 @@ let directions = [
         y: -1
     }
 ];
-let grid;
-let editorGrid;
+var grid;
+var editorGrid;
 
 function gridContains(x, y) {
     return x >= 0 && y >= 0 && x < grid.length && y < grid[0].length;
@@ -384,9 +384,9 @@ function inputMove(e) {
         if (!editorGrid || !window.ctx) {
             return;
         }
-        for (let x = 0; x < editorGrid.length; x++) {
-            for (let y = 0; y < editorGrid[x].length; y++) {
-                let tileRect = transformRectangle(x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
+        for (var x = 0; x < editorGrid.length; x++) {
+            for (var y = 0; y < editorGrid[x].length; y++) {
+                var tileRect = transformRectangle(x * 50 + grid.length * -25, y * 50 + grid[0].length * -25, 50, 50);
                 if (mouseX > tileRect.x && mouseY > tileRect.y && mouseX < tileRect.x + tileRect.w && mouseY < tileRect.y + tileRect.h) {
                     editorHover = {
                         x: x,
@@ -396,17 +396,17 @@ function inputMove(e) {
             }
         }
         ctx.resetTransform();
-        for (let x in editorTools) {
+        for (var x in editorTools) {
             if (x != editorToolIndex) {
                 ctx.globalAlpha = 0.5;
             } else {
                 ctx.globalAlpha = 1;
             }
-            let yPos = 75 + x * 65 - 25 - smoothedEditorToolIndex * 65;
-            let rectLeft = 50;
-            let rectTop = yPos;
-            let rectRight = 100;
-            let rectBottom = yPos + 50;
+            var yPos = 75 + x * 65 - 25 - smoothedEditorToolIndex * 65;
+            var rectLeft = 50;
+            var rectTop = yPos;
+            var rectRight = 100;
+            var rectBottom = yPos + 50;
             if (mouseX > rectLeft && mouseY > rectTop && mouseX < rectRight && mouseY < rectBottom) {
                 selectedEditorTool = x;
                 editorHover = null;
@@ -414,13 +414,13 @@ function inputMove(e) {
         }
     }
     if (tickFunction == menuTick) {
-        let centerX = w / 2;
-        let yTop = h / 2;
+        var centerX = w / 2;
+        var yTop = h / 2;
         yTop -= MENU_WIDTH / 2;
         yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
-        for (let i in menuOptions) {
-            let x = centerX;
-            let y = yTop + MENU_WIDTH + ((i + 8) * MENU_OPTION_HEIGHT);
+        for (var i in menuOptions) {
+            var x = centerX;
+            var y = yTop + MENU_WIDTH + ((i + 8) * MENU_OPTION_HEIGHT);
             if (mouseX > x - MENU_WIDTH / 2 && mouseX < x + MENU_WIDTH / 2 && mouseY > y - 25 && mouseY < y + 25) {
                 menuSelectionIndex = i;
             }
@@ -428,7 +428,7 @@ function inputMove(e) {
     }
 }
 
-let updater = (d) => {
+var updater = (d) => {
     while (d.type != "cellCorev1") {
         switch (d.type) {
             default:
@@ -438,37 +438,33 @@ let updater = (d) => {
 }
 
 window.onload = () => {
-	try {
-		setInterval(tick, 0);
-		let fileUploader = document.getElementById("fileUploader");
-		fileUploader.onchange = (e) => {
-			let file = e.target.files[0];
-			let reader = new FileReader();
-			reader.onload = (o) => {
-				let text = o.target.result;
-				let data = JSON.parse(text);
-				updater(data);
-				if (data.grid) {
-					grid = structuredClone(data.grid);
-					editorGrid = structuredClone(data.grid);
-				} else {
-					alert("File import error!");
-				}
-			}
-			reader.readAsText(file);
-		}
-		setInterval(() => {
-			prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length - 1)];
-		}, 1000);
-	} catch(err) {
-		alert(err);
-	}
+    setInterval(tick, 0);
+    var fileUploader = document.getElementById("fileUploader");
+    fileUploader.onchange = (e) => {
+        var file = e.target.files[0];
+        var reader = new FileReader();
+        reader.onload = (o) => {
+            var text = o.target.result;
+            var data = JSON.parse(text);
+            updater(data);
+            if (data.grid) {
+                grid = structuredClone(data.grid);
+                editorGrid = structuredClone(data.grid);
+            } else {
+                alert("File import error!");
+            }
+        }
+        reader.readAsText(file);
+    }
+    setInterval(() => {
+        prideColors = prideColorsCycle[Math.ceil(Math.random() * prideColorsCycle.length - 1)];
+    }, 1000);
 }
 
 function createGridForHaxors(w, h) {
-    for (let y = 0; y < h; y++) {
-        let row = [];
-        for (let x = 0; x < w; x++) {
+    for (var y = 0; y < h; y++) {
+        var row = [];
+        for (var x = 0; x < w; x++) {
             row.push(null);
         }
         editorGrid.push(row);
@@ -480,7 +476,7 @@ function screenContainsPoint(x, y) {
 }
 
 function screenContainsTransformedRect(x, y, w, h) {
-    let rect = transformRectangle(x, y, w, h);
+    var rect = transformRectangle(x, y, w, h);
     return screenContainsPoint(rect.x, rect.y) || screenContainsPoint(rect.x + rect.w, rect.y) || screenContainsPoint(rect.x, rect.y + rect.h) || screenContainsPoint(rect.x + rect.w, rect.y + rect.h);
 }
 
@@ -488,8 +484,8 @@ function drawImage(image, x, y, w, h, disableCScale) {
     if (!screenContainsTransformedRect(x, y, w, h) && !disableCScale) {
         //return;
     }
-    let cScale = 1;
-    let isStandardTile = ctx.roundRect != null && image != "tileA" && image != "tileB";
+    var cScale = 1;
+    var isStandardTile = ctx.roundRect != null && image != "tileA" && image != "tileB";
     if (tickFunction == editorTick || tickFunction == gameTick) {
         cScale = cameraScale;
     }
@@ -550,8 +546,8 @@ function menuTick() {
         menuOptions.push({
             text: "Export",
             func: () => {
-                let tempLink = document.createElement("a");
-                let blob = new Blob([JSON.stringify({
+                var tempLink = document.createElement("a");
+                var blob = new Blob([JSON.stringify({
                     type: "cellCorev1",
                     grid: editorGrid
                 })], { type: 'text/cellcore' });
@@ -564,9 +560,9 @@ function menuTick() {
             }
         });
     }
-    let faviconImage = "/Tx2/Pusher.png";
-    let favicon = document.getElementById("icon");
-    let menuLogo = "pusher"; // for users of development versions
+    var faviconImage = "/Tx2/Pusher.png";
+    var favicon = document.getElementById("icon");
+    var menuLogo = "pusher"; // for users of development versions
     if (window.location.hostname != 'codelikecraze.github.io') {
         menuLogo = "rotater";
         faviconImage = "/Tx2/Rotator.png"
@@ -578,14 +574,14 @@ function menuTick() {
     if (favicon.href != faviconImage) {
         favicon.href = faviconImage;
     }
-    let centerX = w / 2;
-    let yTop = h / 2;
+    var centerX = w / 2;
+    var yTop = h / 2;
     yTop -= MENU_WIDTH / 2;
     yTop -= MENU_OPTION_HEIGHT * 4 * (menuOptions.length);
     if (usePrideIcon) {
         drawImage("prwhite", centerX - MENU_WIDTH / 2, yTop, MENU_WIDTH, MENU_WIDTH, true);
         ctx.globalCompositeOperation = "multiply";
-        for (let i in prideColors) {
+        for (var i in prideColors) {
             if (ctx.fillStyle != prideColors[i]) {
                 ctx.fillStyle = prideColors[i];
             }
@@ -599,7 +595,7 @@ function menuTick() {
     ctx.fillStyle = "white";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    for (let i in menuOptions) {
+    for (var i in menuOptions) {
         if (i == menuSelectionIndex) {
             ctx.globalAlpha = 1;
         } else {
@@ -617,7 +613,7 @@ function tick() {
     w = innerWidth;
     h = innerHeight;
 
-    let t = performance.now();
+    var t = performance.now();
 
     if (!window.previousTime) {
         window.previousTime = t;
@@ -631,9 +627,9 @@ function tick() {
 
     window.previousTime = t;
 
-    for (let x in textures) {
+    for (var x in textures) {
         if (!textureElements[x]) {
-            let elm = document.createElement("img");
+            var elm = document.createElement("img");
             elm.src = textures[x];
             textureElements[x] = elm;
         }
@@ -682,7 +678,7 @@ function tick() {
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
 
-    let versionText = "";
+    var versionText = "";
     if (window.location.hostname != 'codelikecraze.github.io') {
         versionText = "FORKED";
     }
@@ -712,8 +708,8 @@ function tick() {
 }
 
 function editorTick() {
-    for (let x = 0; x < editorGrid.length; x++) {
-        for (let y = 0; y < editorGrid[x].length; y++) {
+    for (var x = 0; x < editorGrid.length; x++) {
+        for (var y = 0; y < editorGrid[x].length; y++) {
             ctx.resetTransform();
             translateCamera();
             if ((x + y) % 2 == 0) {
@@ -723,8 +719,8 @@ function editorTick() {
             }
         }
     }
-    for (let x = 0; x < editorGrid.length; x++) {
-        for (let y = 0; y < editorGrid[x].length; y++) {
+    for (var x = 0; x < editorGrid.length; x++) {
+        for (var y = 0; y < editorGrid[x].length; y++) {
             if (editorGrid[x][y]) {
                 editorGrid[x][y].x = x;
                 editorGrid[x][y].y = y;
@@ -740,7 +736,7 @@ function editorTick() {
         }
     }
     if (editorHover) {
-        let alpha = lerp(0.2, 0.4, Math.abs(Math.sin(new Date().getTime() / 300)));
+        var alpha = lerp(0.2, 0.4, Math.abs(Math.sin(new Date().getTime() / 300)));
         ctx.fillStyle = `rgba(255,255,255,${alpha})`;
         ctx.resetTransform();
         translateCamera();
@@ -752,12 +748,12 @@ function editorTick() {
             } else if (editorTools[editorToolIndex] == "eraser") {
                 editorGrid[editorHover.x][editorHover.y] = null;
             } else if (editorTools[editorToolIndex] == "pan") {
-                let xMovement = (mouseX - w / 2) / w * 2;
-                let yMovement = (mouseY - h / 2) / h * 2;
+                var xMovement = (mouseX - w / 2) / w * 2;
+                var yMovement = (mouseY - h / 2) / h * 2;
                 targetCameraX += xMovement * deltaTime * 250;
                 targetCameraY += yMovement * deltaTime * 250;
             } else if (editorTools[editorToolIndex] == "zoom") {
-                let yMovement = (mouseY - innerHeight / 2) / innerHeight * 2;
+                var yMovement = (mouseY - innerHeight / 2) / innerHeight * 2;
                 targetCameraScale += yMovement * deltaTime * 1;
             } else {
                 editorGrid[editorHover.x][editorHover.y] = {
@@ -773,14 +769,14 @@ function editorTick() {
     grid = structuredClone(editorGrid);
     smoothEditorDir = lerp(smoothEditorDir, editorDir, deltaTime * 15);
     smoothedEditorToolIndex = lerp(smoothedEditorToolIndex, editorToolIndex, deltaTime * 10);
-    for (let x in editorTools) {
+    for (var x in editorTools) {
         if (x != editorToolIndex) {
             ctx.globalAlpha = 0.25;
         } else {
             ctx.globalAlpha = 1;
         }
         ctx.globalAlpha = 1;
-        let scaleMultiplier = Math.clamp(1.3 - Math.abs(smoothedEditorToolIndex - x) / 4, 1, 1.3);
+        var scaleMultiplier = Math.clamp(1.3 - Math.abs(smoothedEditorToolIndex - x) / 4, 1, 1.3);
         ctx.resetTransform();
         ctx.translate(75, 75 - smoothedEditorToolIndex * 65 + x * 65);
         ctx.rotate(smoothEditorDir * Math.PI / 2);
@@ -795,8 +791,8 @@ function gameTick() {
         gameTickTime = 0.3;
     }
 
-    for (let x = 0; x < grid.length; x++) {
-        for (let y = 0; y < grid[x].length; y++) {
+    for (var x = 0; x < grid.length; x++) {
+        for (var y = 0; y < grid[x].length; y++) {
             ctx.resetTransform();
             translateCamera();
             if ((x + y) % 2 == 0) {
@@ -806,8 +802,8 @@ function gameTick() {
             }
         }
     }
-    for (let x = 0; x < grid.length; x++) {
-        for (let y = 0; y < grid[x].length; y++) {
+    for (var x = 0; x < grid.length; x++) {
+        for (var y = 0; y < grid[x].length; y++) {
             if (grid[x][y]) {
                 grid[x][y].x = lerp(grid[x][y].x, x, deltaTime * 15);
                 grid[x][y].y = lerp(grid[x][y].y, y, deltaTime * 15);
@@ -830,8 +826,8 @@ function calculateTranslatedPoint(x, y) {
 }
 
 function transformRectangle(x, y, w, h) {
-    let topLeft = calculateTranslatedPoint(x, y);
-    let bottomRight = calculateTranslatedPoint(x + w, y + h);
+    var topLeft = calculateTranslatedPoint(x, y);
+    var bottomRight = calculateTranslatedPoint(x + w, y + h);
     return {
         x: topLeft.x,
         y: topLeft.y,
@@ -846,19 +842,19 @@ function translateCamera() {
     ctx.translate(-cameraX, -cameraY);
 }
 
-let cellTick = () => {
-    let priorityPhases = ['rotater', 'alternaterotater', 'sucker', 'fan', 'drill', 'generater', 'mover'];
-    for (let i in priorityPhases) {
-        for (let x = 0; x < grid.length; x++) {
-            for (let y = 0; y < grid[x].length; y++) {
+var cellTick = () => {
+    var priorityPhases = ['rotater', 'alternaterotater', 'sucker', 'fan', 'drill', 'generater', 'mover'];
+    for (var i in priorityPhases) {
+        for (var x = 0; x < grid.length; x++) {
+            for (var y = 0; y < grid[x].length; y++) {
                 if (grid[x][y] && grid[x][y].type == priorityPhases[i]) {
                     tryUpdate(x, y);
                 }
             }
         }
     }
-    for (let x = 0; x < grid.length; x++) {
-        for (let y = 0; y < grid[x].length; y++) {
+    for (var x = 0; x < grid.length; x++) {
+        for (var y = 0; y < grid[x].length; y++) {
             tryUpdate(x, y);
         }
     }
@@ -878,7 +874,7 @@ function push(d, x, y) {
     if (!grid[x][y]) {
         return;
     }
-    let dir = d % 4;
+    var dir = d % 4;
     if (tiles[grid[x][y].type] && tiles[grid[x][y].type].generateInfo) {
         tiles[grid[x][y].type].generateInfo(x, y);
     }
